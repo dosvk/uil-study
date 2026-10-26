@@ -1,0 +1,148 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1115">
+<title>Number Sense</title>
+<style>
+:root{--bg:#0f1115;--card:#1b1e26;--fg:#f2f3f5;--sub:#aab0bb;--accent:#5b8def;--ok:#2e8c4f;--bad:#b23b3b;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:-apple-system,"Segoe UI",system-ui,sans-serif;}
+#app{height:100dvh;display:flex;flex-direction:column;}
+header{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #2a2e38;}
+header a{color:var(--sub);text-decoration:none;font-size:18px;}
+header .t{font-size:15px;font-weight:800;}
+.tabs{display:flex;gap:5px;padding:8px;border-bottom:1px solid #2a2e38;}
+.tab{flex:1;text-align:center;padding:9px 6px;border-radius:10px;background:var(--card);font-size:13px;border:1px solid #2a2e38;}
+.tab.on{background:var(--accent);border-color:var(--accent);}
+main{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;}
+.pad{padding:16px;max-width:560px;margin:0 auto;}
+h2{font-size:18px;color:#8fb0f5;margin:4px 0 10px;}
+h3{font-size:15px;margin:18px 0 6px;}
+p,li{line-height:1.55;font-size:14.5px;}
+ul{padding-left:20px;margin:6px 0;}
+.tip{background:#161b26;border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:11px 14px;margin:14px 0;font-size:14px;}
+.trick{background:var(--card);border:1px solid #2a2e38;border-radius:12px;padding:12px 14px;margin:10px 0;}
+.trick .n{font-weight:800;}
+.trick .r{font-size:14px;margin:4px 0;}
+.trick .e{font-size:13.5px;color:#9fd6b2;font-family:ui-monospace,Menlo,monospace;}
+.trick button{margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:8px 13px;font-size:13.5px;font-weight:700;}
+.prob{font-size:30px;font-weight:800;text-align:center;margin:26px 0 14px;font-variant-numeric:tabular-nums;}
+.prob.sm{font-size:20px;line-height:1.35;}
+input.ans{width:100%;font-size:26px;padding:12px;border-radius:12px;border:1px solid #2a2e38;background:var(--card);color:var(--fg);text-align:center;}
+.row{display:flex;gap:8px;margin-top:10px;}
+.row button{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;color:#fff;background:var(--accent);}
+.row button.alt{background:#2b3444;}
+.fb{text-align:center;margin:12px 0;font-size:15px;min-height:22px;}
+.fb.ok{color:#7fd69a;}.fb.bad{color:#f08a8a;}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #2a2e38;font-size:14px;color:var(--sub);}
+.clock{font-size:20px;font-weight:800;color:var(--fg);font-variant-numeric:tabular-nums;}
+.big{font-size:44px;font-weight:800;text-align:center;color:#8fb0f5;margin:12px 0 4px;}
+.start{display:block;width:100%;padding:15px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:17px;font-weight:800;margin:12px 0;}
+.review{font-size:14px;border-top:1px solid #2a2e38;padding:6px 0;}
+.review .x{color:#f08a8a;}
+</style></head><body><div id="app">
+<header><a href="../">&#8249;</a><span class="t">&#128290; Number Sense</span></header>
+<div class="tabs"><div class="tab on" data-v="learn">Learn</div><div class="tab" data-v="tricks">Tricks</div><div class="tab" data-v="test">Timed Test</div></div>
+<main id="m"></main>
+<div class="bar" id="bar" style="display:none"><span id="bl"></span><span class="clock" id="clk"></span></div>
+</div>
+<script>
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function roman(n){const v=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let s='';for(const[k,r]of v)while(n>=k){s+=r;n-=k;}return s;}
+function frac(n,d){const g=gcd(n,d);n/=g;d/=g;return d===1?String(n):n+'/'+d;}
+// Each generator returns [question, answer-string, hint]
+const T={
+ x11:{name:'Times 11',rule:'For a 2-digit number, write the first digit, then the sum of the two digits, then the last digit. Carry if the middle is 10 or more.',ex:'43 x 11 → 4 (4+3) 3 = 473',
+  g(){const a=R(12,98);return[a+' × 11',String(a*11),'Write the first digit, the sum of the digits, then the last digit.'];}},
+ x5:{name:'Times 5',rule:'Multiply by 10, then cut in half.',ex:'48 x 5 → 480 ÷ 2 = 240',
+  g(){const a=R(12,198);return[a+' × 5',String(a*5),'Times 10, then half.'];}},
+ x25:{name:'Times 25',rule:'25 is 100 ÷ 4. Divide by 4, then add two zeros.',ex:'28 x 25 → 28 ÷ 4 = 7 → 700',
+  g(){const a=4*R(3,30);return[a+' × 25',String(a*25),'Divide by 4, then put two zeros on.'];}},
+ x50:{name:'Times 50',rule:'Cut in half, then add two zeros.',ex:'34 x 50 → 17 → 1700',
+  g(){const a=2*R(6,49);return[a+' × 50',String(a*50),'Half, then two zeros.'];}},
+ near:{name:'Same distance from a round number',rule:'When both numbers are the same distance from a round number: round number squared, minus the distance squared.',ex:'19 x 21 → 20x20 − 1x1 = 399',
+  g(){const c=pick([20,30,40,50,60]),d=R(1,4);return[(c-d)+' × '+(c+d),String(c*c-d*d),c+'×'+c+' minus '+d+'×'+d+'.'];}},
+ sq5:{name:'Squaring numbers ending in 5',rule:'Take the tens digit, times one more than itself, then write 25 after it.',ex:'35 x 35 → 3x4 = 12 → 1225',
+  g(){const t=R(1,9),a=t*10+5;return[a+' × '+a,String(a*a),t+'×'+(t+1)+', then 25.'];}},
+ near100:{name:'Both near 100',rule:'Find how far each is below 100. Subtract one distance from the OTHER number for the first part; multiply the distances for the last two digits.',ex:'91 x 95 → 9 and 5 below → 91−5 = 86, 9x5 = 45 → 8645',
+  g(){const a=R(88,99),b=R(88,99);return[a+' × '+b,String(a*b),'Distances '+(100-a)+' and '+(100-b)+'.'];}},
+ tables:{name:'Basic facts',rule:'Know your times tables to 12 cold. They are inside almost every problem.',ex:'7 x 8 = 56, 12 x 12 = 144',
+  g(){const a=R(3,12),b=R(3,12);return[a+' × '+b,String(a*b),'Times tables.'];}},
+ addsub:{name:'Add and subtract',rule:'Work left to right in your head. For subtraction, count up from the smaller number.',ex:'721 − 127 → 127 up to 721 is 594',
+  g(){if(Math.random()<.5){const a=R(15,99),b=R(15,99);return[a+' + '+b,String(a+b),'Tens first, then ones.'];}const a=R(300,999),b=R(100,a-1);return[a+' − '+b,String(a-b),'Count up from '+b+'.'];}},
+ series:{name:'Adding a row of numbers',rule:'For evenly spaced numbers: (first + last) × how many ÷ 2.',ex:'2+3+...+10 → (2+10) x 9 ÷ 2 = 54',
+  g(){const a=R(1,6),b=a+R(5,12);let s=0;for(let i=a;i<=b;i++)s+=i;return[a+' + '+(a+1)+' + ... + '+b,String(s),'('+a+'+'+b+') × '+(b-a+1)+' ÷ 2.'];}},
+ rem:{name:'Remainders',rule:'Remainder by 2, 5 or 10: only the last digit matters. By 3 or 9: add up the digits and find that remainder.',ex:'20583 ÷ 5 → last digit 3 → remainder 3',
+  g(){const d=pick([2,3,5,9,10]),a=R(1000,99999);const ds=String(a).split('').reduce((s,c)=>s+ +c,0);return['Remainder of '+a+' ÷ '+d,String(a%d),(d===3||d===9)?'Digits add to '+ds+'.':'Look at the last digit.'];}},
+ round:{name:'Rounding',rule:'Look at the digit just to the right of the place. 5 or more rounds up.',ex:'958307 to the thousands → 958000',
+  g(){const a=R(10000,999999),p=pick([[10,'tens'],[100,'hundreds'],[1000,'thousands']]);return[a+' rounded to the '+p[1],String(Math.round(a/p[0])*p[0]),'Look at the digit right of the '+p[1]+' place.'];}},
+ roman:{name:'Roman numerals',rule:'I=1 V=5 X=10 L=50 C=100 D=500 M=1000. A smaller one in front means subtract (IV=4, XC=90, CM=900).',ex:'MCMXXV = 1000 + 900 + 20 + 5 = 1925',
+  g(){const n=R(1,2026);if(Math.random()<.5)return[roman(n)+' = ? (number)',String(n),'Read left to right, subtract when smaller comes first.'];return[n+' in Roman numerals',roman(n),'Thousands, then hundreds, tens, ones.'];}},
+ odd:{name:'Odd and even counting',rule:'Count the numbers strictly between, then about half are odd. Check both ends carefully.',ex:'Odd numbers between 11 and 48 → 13 to 47 → 18',
+  g(){const a=R(3,40),b=a+R(10,40);let c=0;for(let i=a+1;i<b;i++)if(i%2)c++;return['How many odd numbers are between '+a+' and '+b+'?',String(c),'Between means do not count '+a+' or '+b+'.'];}},
+ order:{name:'Order of operations',rule:'Multiply and divide BEFORE you add and subtract.',ex:'12 + 8 x 2 = 12 + 16 = 28',
+  g(){const a=R(2,20),b=R(2,9),c=R(2,9);return Math.random()<.5?[a+' + '+b+' × '+c,String(a+b*c),'Do '+b+'×'+c+' first.']:[(b*c+a)+' − '+b+' × '+c,String(a),'Do '+b+'×'+c+' first.'];}},
+ fr:{name:'Fractions, same bottom',rule:'Same denominator: add or subtract the tops, keep the bottom, then simplify.',ex:'7/24 + 13/24 = 20/24 = 5/6',
+  g(){const d=pick([6,8,10,12,15,16,20,24]),a=R(1,d-2),b=R(1,d-a-1);return[a+'/'+d+' + '+b+'/'+d+'  (simplest form)',frac(a+b,d),'Add the tops: '+(a+b)+'/'+d+', then simplify.'];}},
+ pct:{name:'Fraction to percent',rule:'Make the bottom 100. Over 25: times 4. Over 20: times 5. Over 50: times 2.',ex:'14/25 = 56/100 = 56%',
+  g(){const d=pick([4,5,10,20,25,50]),a=R(1,d-1);return[a+'/'+d+' = ? percent',String(a*100/d),'Make the bottom 100.'];}},
+ gcd:{name:'Greatest common divisor',rule:'The biggest number that divides both evenly.',ex:'GCD of 24 and 32 = 8',
+  g(){const g=R(2,12),a=g*R(2,6),b=g*R(2,7);return['Greatest common divisor of '+a+' and '+b,String(gcd(a,b)),'Try the biggest number that goes into both.'];}},
+ units:{name:'Unit conversions',rule:'1 min = 60 sec, 1 hr = 60 min, 1 ft = 12 in, 1 yd = 3 ft, 1 yr = 12 months, 1 gal = 4 qt.',ex:'120 seconds = 2 minutes',
+  g(){const u=pick([['minutes','seconds',60],['hours','minutes',60],['feet','inches',12],['yards','feet',3],['years','months',12],['gallons','quarts',4]]),n=R(2,15);return[n+' '+u[0]+' = ? '+u[1],String(n*u[2]),'1 '+u[0].replace(/s$/,'')+' = '+u[2]+' '+u[1]+'.'];}}
+};
+const TEST_ORDER=['addsub','tables','x11','addsub','series','round','x5','rem','roman','x11','odd','tables','x25','order','near','sq5','fr','units','x50','pct','near100','gcd','rem','x11','order','near','x25','sq5','pct','roman'];
+function norm(s){return String(s).trim().toUpperCase().replace(/\s+/g,'').replace(/%$/,'');}
+function learn(){m.innerHTML=`<div class="pad">
+<h2>How the contest works</h2>
+<ul><li><strong>10 minutes, 80 problems</strong>, fill in the blank. Grades 4-6 take the same test.</li>
+<li><strong>All in your head.</strong> No scratch work, no calculator. Write only the answer.</li>
+<li><strong>No erasing or crossing out.</strong> A marked-out answer counts as wrong.</li>
+<li>Problems get harder as you go. Problems with a * want an estimate within 5%.</li></ul>
+<h3>Scoring (this changes how you play)</h3>
+<ul><li><strong>+5</strong> for each right answer.</li>
+<li><strong>−4</strong> for each wrong answer AND each problem you skip.</li>
+<li><strong>Nothing</strong> is taken off for problems after the last one you tried.</li></ul>
+<div class="tip"><strong>The big rule:</strong> go in order and don't skip. A skipped problem costs 4 points just like a wrong one. When you hit the problems you can't do, stop there. Stopping costs nothing. Guessing wild answers costs 4 each.</div>
+<p>Most 4th graders score well by getting the first 20-30 problems fast and right. Speed comes from the <strong>Tricks</strong> tab: each one turns a slow problem into a 2-second one.</p>
+<h3>What shows up first (problems 1-20)</h3>
+<p>Adding, subtracting, multiplying, dividing; place value; rounding; times-11 and other shortcuts; remainders; odd/even counting; expanded notation; Roman numerals.</p>
+<h3>Next (21-40)</h3>
+<p>Fractions with the same bottom, comparing fractions and decimals, fraction/decimal/percent changes, order of operations, more shortcuts, ratios, money problems, primes under 100, GCD and LCM, time and length conversions.</p>
+<p style="font-size:13px;color:var(--sub)">Source: <a style="color:#8fb0f5" href="https://www.uiltexas.org/aplus/events/aplus-number-sense">UIL A+ Number Sense</a> rules and the official problem sequencing chart. Real practice: <a style="color:#8fb0f5" href="https://www.uiltexas.org/files/academics/aplus/A+_Number_Sense_Sample_Test_and_Key.pdf">UIL sample test &amp; key</a>.</p></div>`;}
+function tricks(){m.innerHTML='<div class="pad"><h2>Tricks and practice</h2><p>Read the rule, look at the example, then tap Practice for 10 quick ones.</p>'+
+ Object.entries(T).map(([k,t])=>'<div class="trick"><div class="n">'+t.name+'</div><div class="r">'+t.rule+'</div><div class="e">'+t.ex+'</div><button data-k="'+k+'">Practice</button></div>').join('')+'</div>';
+ m.querySelectorAll('.trick button').forEach(b=>b.onclick=()=>drill(b.dataset.k));}
+let st=null;
+function drill(k){st={mode:'drill',k,n:0,right:0};nextDrill();}
+function nextDrill(){if(st.n>=10){m.innerHTML='<div class="pad"><div class="big">'+st.right+' / 10</div><p style="text-align:center">'+T[st.k].name+'</p><div class="row"><button id="again">Again</button><button class="alt" id="back">All tricks</button></div></div>';again.onclick=()=>drill(st.k);back.onclick=tricks;return;}
+ const [q,a,h]=T[st.k].g();st.cur=[q,a,h];
+ m.innerHTML='<div class="pad"><p style="text-align:center;color:var(--sub)">'+T[st.k].name+' &middot; '+(st.n+1)+' / 10</p><div class="prob'+(q.length>16?' sm':'')+'">'+q+'</div><input class="ans" id="ai" autocomplete="off" inputmode="'+(st.k==='roman'||st.k==='fr'?'text':'numeric')+'"><div class="row"><button id="ck">Check</button><button class="alt" id="hn">Hint</button></div><div class="fb" id="fb"></div></div>';
+ ai.focus();ai.onkeydown=e=>{if(e.key==='Enter')ck.onclick();};
+ hn.onclick=()=>{fb.className='fb';fb.textContent=h;};
+ ck.onclick=()=>{if(st.done)return;st.done=true;const ok=norm(ai.value)===norm(a);st.n++;if(ok)st.right++;
+  fb.className='fb '+(ok?'ok':'bad');fb.textContent=ok?'Correct!':'Answer: '+a+'  ('+h+')';setTimeout(()=>{st.done=false;nextDrill();},ok?700:2200);};}
+let timer=null;
+function testIntro(){clearInterval(timer);bar.style.display='none';m.innerHTML='<div class="pad"><h2>Timed test</h2><p>Like the real contest: problems in order, getting harder. Real scoring: +5 right, −4 wrong or skipped, nothing after the last one you try.</p><p>Type the answer and press Enter (or Next). Press <strong>Skip</strong> only if you must, it costs 4. Press <strong>Stop</strong> when you hit ones you can\'t do.</p><button class="start" data-s="300">Start 5-minute test</button><button class="start" data-s="600">Start 10-minute test (real length)</button></div>';
+ m.querySelectorAll('.start').forEach(b=>b.onclick=()=>startTest(+b.dataset.s));}
+function startTest(secs){st={mode:'test',i:0,log:[],end:Date.now()+secs*1000};bar.style.display='flex';
+ timer=setInterval(()=>{const s=Math.max(0,Math.round((st.end-Date.now())/1000));clk.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');if(s<=0)finish();},250);nextTest();}
+function nextTest(){const k=TEST_ORDER[st.i%TEST_ORDER.length];const [q,a]=T[k].g();st.cur=[q,a];bl.textContent='Problem '+(st.i+1);
+ m.innerHTML='<div class="pad"><div class="prob'+(q.length>16?' sm':'')+'">('+(st.i+1)+') '+q+'</div><input class="ans" id="ai" autocomplete="off" inputmode="'+(k==='roman'||k==='fr'?'text':'numeric')+'"><div class="row"><button id="nx">Next</button><button class="alt" id="sk">Skip</button><button class="alt" id="sp">Stop</button></div></div>';
+ ai.focus();ai.onkeydown=e=>{if(e.key==='Enter')nx.onclick();};
+ nx.onclick=()=>{if(!ai.value.trim())return;st.log.push({q,a,g:ai.value.trim(),ok:norm(ai.value)===norm(a)});st.i++;nextTest();};
+ sk.onclick=()=>{st.log.push({q,a,g:'(skipped)',ok:false});st.i++;nextTest();};
+ sp.onclick=finish;}
+function finish(){clearInterval(timer);if(st.mode!=='test')return;st.mode='done';bar.style.display='none';
+ const r=st.log.filter(x=>x.ok).length,w=st.log.length-r,score=5*r-4*w;
+ m.innerHTML='<div class="pad"><div class="big">'+score+'</div><p style="text-align:center">'+r+' right &times; 5 &minus; '+w+' wrong or skipped &times; 4</p>'+
+ st.log.filter(x=>!x.ok).map(x=>'<div class="review">'+x.q+' &rarr; <span class="x">'+x.g+'</span>, answer <strong>'+x.a+'</strong></div>').join('')+
+ '<button class="start" id="ag">Try again</button></div>';ag.onclick=testIntro;}
+function go(v){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));clearInterval(timer);bar.style.display='none';m.scrollTop=0;
+ if(v==='learn')learn();else if(v==='tricks')tricks();else testIntro();}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.v));
+go('learn');
+</script></body></html>

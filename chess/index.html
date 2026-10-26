@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1115">
+<title>Chess Puzzle</title>
+<style>
+:root{--bg:#0f1115;--card:#1b1e26;--card2:#232834;--fg:#f2f3f5;--sub:#aab0bb;--accent:#5b8def;--ok:#2e8c4f;--bad:#b23b3b;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:-apple-system,"Segoe UI",system-ui,sans-serif;}
+#app{height:100dvh;display:flex;flex-direction:column;}
+header{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #2a2e38;}
+header a{color:var(--sub);text-decoration:none;font-size:18px;}
+header .t{font-size:15px;font-weight:800;}
+.tabs{display:flex;gap:5px;padding:8px;border-bottom:1px solid #2a2e38;}
+.tab{flex:1;text-align:center;padding:9px 6px;border-radius:10px;background:var(--card);color:var(--fg);font-size:13px;border:1px solid #2a2e38;}
+.tab.on{background:var(--accent);border-color:var(--accent);}
+main{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;}
+.pad{padding:16px;max-width:560px;margin:0 auto;}
+h2{font-size:18px;color:#8fb0f5;margin:4px 0 10px;}
+h3{font-size:15px;margin:18px 0 6px;}
+p,li{line-height:1.55;font-size:14.5px;}
+ul{padding-left:20px;margin:6px 0;}
+.tip{background:#161b26;border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:11px 14px;margin:14px 0;font-size:14px;}
+table.v{border-collapse:collapse;margin:8px 0;}
+table.v td{padding:5px 14px;border-bottom:1px solid #2a2e38;font-size:15px;}
+.board{display:grid;grid-template-columns:18px repeat(8,1fr);width:100%;max-width:400px;margin:8px auto;user-select:none;}
+.sq{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:min(9vw,38px);line-height:1;}
+.l{background:#e9d7b4;}.d{background:#b58863;}
+.sq .w{color:#fff;text-shadow:0 0 2px #000,0 0 2px #000,0 0 1px #000;}
+.sq .b{color:#111;}
+.coord{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;}
+.q{font-weight:700;font-size:15.5px;margin:10px 0 4px;}
+.turn{font-size:13px;color:var(--sub);text-align:center;}
+.opt{display:block;width:100%;text-align:left;margin:7px 0;padding:12px 14px;border-radius:11px;border:1px solid #2a2e38;background:var(--card);color:var(--fg);font-size:15px;}
+.opt.ok{background:var(--ok);border-color:var(--ok);}
+.opt.bad{background:var(--bad);border-color:var(--bad);}
+.why{font-size:13.5px;color:#9fd6b2;margin:8px 0;}
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #2a2e38;}
+.bar button{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;}
+.bar .s{font-size:14px;color:var(--sub);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}
+.chip{padding:7px 11px;border-radius:20px;border:1px solid #2a2e38;background:var(--card);color:var(--fg);font-size:13px;}
+.chip.on{background:var(--accent);border-color:var(--accent);}
+.big{font-size:44px;font-weight:800;text-align:center;margin:10px 0;color:#8fb0f5;}
+input.sqin{width:100%;font-size:22px;padding:12px;border-radius:11px;border:1px solid #2a2e38;background:var(--card);color:var(--fg);text-align:center;text-transform:lowercase;}
+.hl{outline:4px solid #e0a800;outline-offset:-4px;}
+</style></head><body><div id="app">
+<header><a href="../">&#8249;</a><span class="t">&#9823; Chess Puzzle</span></header>
+<div class="tabs">
+ <div class="tab on" data-v="learn">Learn</div>
+ <div class="tab" data-v="puz">Puzzles</div>
+ <div class="tab" data-v="sq">Squares</div>
+</div>
+<main id="m"></main>
+<div class="bar" id="bar" style="display:none"><span class="s" id="score"></span><button id="next">Next &rarr;</button></div>
+</div>
+<script>
+const P=[{"kind": "mate1", "fen": "8/5K1k/8/8/B7/3p4/8/5R2", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Bb5", "Rh1", "Rf3", "Rb1"], "ans": 1, "why": "Rh1# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "7k/7p/4K3/6p1/7B/8/5Q2/8", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Qf8", "Qe1", "Qh2", "Qf1"], "ans": 0, "why": "Qf8# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "8/8/8/7R/8/7B/8/k1K5", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Ra5", "Rb5", "Bf5", "Bd7"], "ans": 0, "why": "Ra5# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "8/7k/8/8/5R2/8/2K3R1/8", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Rh2", "Rd2", "Rgg4", "Rh4"], "ans": 3, "why": "Rh4# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "8/k1K5/7n/8/8/2R5/2B5/8", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Ra3", "Rg3", "Rb3", "Bg6"], "ans": 0, "why": "Ra3# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "3R4/k7/2R5/K7/3p4/2p5/8/8", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Rc7", "Ra6", "Rb6", "Rd5"], "ans": 0, "why": "Rc7# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "2K5/1NQ5/k7/8/8/8/6n1/8", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Qd8", "Qa5", "Qh7", "Qf7"], "ans": 1, "why": "Qa5# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "8/8/8/p7/6N1/8/1K1Q4/5k2", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Qd8", "Qf2", "Qd5", "Ne3"], "ans": 1, "why": "Qf2# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "8/8/8/8/p7/5K1k/5R2/2R5", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Rh1", "Rg1", "Rc6", "Ra2"], "ans": 0, "why": "Rh1# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "5B2/8/8/8/3p4/3Q4/4K3/2k5", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Ba3", "Bg7", "Qb1", "Qa6"], "ans": 0, "why": "Ba3# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "2K3Q1/7N/8/7k/8/8/1n6/8", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Qd5", "Qg5", "Qg1", "Qe8"], "ans": 1, "why": "Qg5# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "4BK2/7k/4p3/2R5/8/8/8/8", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Rb5", "Rh5", "Rc7", "Re5"], "ans": 1, "why": "Rh5# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "4R3/8/8/8/8/2K5/1pR5/6k1", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Re5", "Re1", "Rg2", "Rh2"], "ans": 1, "why": "Re1# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "mate1", "fen": "8/8/1B6/7K/8/4Q3/8/5k2", "turn": "White", "q": "White to move. Which move is checkmate?", "opts": ["Qf2", "Qd4", "Qg5", "Qe1"], "ans": 0, "why": "Qf2# attacks the Black king and it has no safe square, no block and no capture."}, {"kind": "state", "fen": "5k2/1N6/K7/8/8/1Q6/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in stalemate.", "Black is in check.", "None of the above.", "Black is in checkmate."], "ans": 2, "why": "Black's king is not attacked and Black has legal moves, so none of these."}, {"kind": "state", "fen": "8/8/7N/8/1K6/8/3p4/1Q4k1", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["None of the above.", "Black is in check.", "Black is in stalemate.", "Black is in checkmate."], "ans": 1, "why": "Black's king is attacked but can escape, so it is only check."}, {"kind": "state", "fen": "8/3K2p1/6N1/k7/8/8/8/1Q6", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in stalemate.", "Black is in checkmate.", "Black is in check.", "None of the above."], "ans": 3, "why": "Black's king is not attacked and Black has legal moves, so none of these."}, {"kind": "state", "fen": "8/8/k7/3K4/8/N4Q2/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in stalemate.", "Black is in check.", "None of the above.", "Black is in checkmate."], "ans": 2, "why": "Black's king is not attacked and Black has legal moves, so none of these."}, {"kind": "state", "fen": "2k5/3Q4/8/8/4Kp2/8/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in check.", "None of the above.", "Black is in stalemate.", "Black is in checkmate."], "ans": 0, "why": "Black's king is attacked but can escape, so it is only check."}, {"kind": "state", "fen": "4k3/8/3K4/4Q3/6N1/8/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in checkmate.", "None of the above.", "Black is in stalemate.", "Black is in check."], "ans": 3, "why": "Black's king is attacked but can escape, so it is only check."}, {"kind": "state", "fen": "8/8/k3R3/8/8/8/8/3K4", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["None of the above.", "Black is in check.", "Black is in checkmate.", "Black is in stalemate."], "ans": 1, "why": "Black's king is attacked but can escape, so it is only check."}, {"kind": "state", "fen": "k4K2/6R1/8/8/8/8/1R6/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in stalemate.", "Black is in checkmate.", "None of the above.", "Black is in check."], "ans": 0, "why": "Black is NOT in check, but has no legal move. That is stalemate (a draw)."}, {"kind": "state", "fen": "8/8/7R/8/7R/8/5K1k/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in check.", "Black is in checkmate.", "Black is in stalemate.", "None of the above."], "ans": 1, "why": "Black's king is attacked and has no way out, so it is checkmate."}, {"kind": "state", "fen": "8/8/3K4/8/3Q4/N7/8/2k5", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in stalemate.", "Black is in checkmate.", "Black is in check.", "None of the above."], "ans": 0, "why": "Black is NOT in check, but has no legal move. That is stalemate (a draw)."}, {"kind": "state", "fen": "8/8/8/5K2/8/8/4R3/R5k1", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in check.", "Black is in stalemate.", "None of the above.", "Black is in checkmate."], "ans": 3, "why": "Black's king is attacked and has no way out, so it is checkmate."}, {"kind": "state", "fen": "8/8/5K1k/8/8/8/3R3R/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["None of the above.", "Black is in stalemate.", "Black is in check.", "Black is in checkmate."], "ans": 3, "why": "Black's king is attacked and has no way out, so it is checkmate."}, {"kind": "state", "fen": "k1K5/2p5/2R5/8/R7/8/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in check.", "Black is in checkmate.", "Black is in stalemate.", "None of the above."], "ans": 1, "why": "Black's king is attacked and has no way out, so it is checkmate."}, {"kind": "state", "fen": "3R2k1/8/6K1/8/8/8/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["None of the above.", "Black is in check.", "Black is in stalemate.", "Black is in checkmate."], "ans": 3, "why": "Black's king is attacked and has no way out, so it is checkmate."}, {"kind": "state", "fen": "8/Q7/8/5P2/8/6K1/8/7k", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in check.", "Black is in checkmate.", "Black is in stalemate.", "None of the above."], "ans": 2, "why": "Black is NOT in check, but has no legal move. That is stalemate (a draw)."}, {"kind": "state", "fen": "7k/8/7K/6Q1/8/8/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["Black is in checkmate.", "Black is in stalemate.", "None of the above.", "Black is in check."], "ans": 1, "why": "Black is NOT in check, but has no legal move. That is stalemate (a draw)."}, {"kind": "state", "fen": "7k/8/5N2/5KQ1/8/8/8/8", "turn": "Black", "q": "Black to move. What best describes this position?", "opts": ["None of the above.", "Black is in stalemate.", "Black is in check.", "Black is in checkmate."], "ans": 1, "why": "Black is NOT in check, but has no legal move. That is stalemate (a draw)."}, {"kind": "material", "fen": "4n3/k7/3R4/K3pP2/6N1/4q1P1/3Pp3/4r2Q", "turn": "White", "q": "Which side has more material (points)?", "opts": ["Can't tell without knowing who moves.", "Black", "White", "It's even."], "ans": 2, "why": "White = 20 points, Black = 19 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "6r1/1K3P2/8/1B4P1/3p1p2/n6R/k4qNb/4Q3", "turn": "White", "q": "Which side has more material (points)?", "opts": ["White", "Black", "It's even.", "Can't tell without knowing who moves."], "ans": 2, "why": "White = 22 points, Black = 22 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "4b3/N3P3/6Rq/p3K2Q/2p4P/2P5/2k5/3r4", "turn": "Black", "q": "Which side has more material (points)?", "opts": ["Can't tell without knowing who moves.", "Black", "White", "It's even."], "ans": 2, "why": "White = 20 points, Black = 19 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "8/8/8/1rn2QK1/5R1P/4k3/1p5p/8", "turn": "Black", "q": "Which side has more material (points)?", "opts": ["It's even.", "White", "Can't tell without knowing who moves.", "Black"], "ans": 1, "why": "White = 15 points, Black = 10 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "5N2/n1P5/q3b3/1R2K3/6Q1/4p3/1k6/3r4", "turn": "Black", "q": "Which side has more material (points)?", "opts": ["Can't tell without knowing who moves.", "It's even.", "White", "Black"], "ans": 3, "why": "White = 18 points, Black = 21 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "3K4/3n4/5Q2/4q3/8/2R3p1/P7/k4N2", "turn": "White", "q": "Which side has more material (points)?", "opts": ["Black", "Can't tell without knowing who moves.", "It's even.", "White"], "ans": 3, "why": "White = 18 points, Black = 13 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "3q4/br2n3/6k1/4R1B1/3Rp3/2p1PP2/8/1NK5", "turn": "Black", "q": "Which side has more material (points)?", "opts": ["White", "It's even.", "Black", "Can't tell without knowing who moves."], "ans": 2, "why": "White = 18 points, Black = 22 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "1N6/6pn/8/4p3/8/P2P4/2K5/4r1k1", "turn": "White", "q": "Which side has more material (points)?", "opts": ["White", "Black", "It's even.", "Can't tell without knowing who moves."], "ans": 1, "why": "White = 5 points, Black = 10 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "2rB4/rk2P3/8/2q5/n7/R7/7Q/4KN2", "turn": "White", "q": "Which side has more material (points)?", "opts": ["White", "It's even.", "Can't tell without knowing who moves.", "Black"], "ans": 3, "why": "White = 21 points, Black = 22 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "8/2p4P/1rP1P1R1/8/4p3/Kp2k3/8/6qQ", "turn": "Black", "q": "Which side has more material (points)?", "opts": ["Black", "White", "It's even.", "Can't tell without knowing who moves."], "ans": 2, "why": "White = 17 points, Black = 17 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "material", "fen": "8/2PK4/q1pP3N/2P5/R5p1/b6B/8/6k1", "turn": "White", "q": "Which side has more material (points)?", "opts": ["White", "It's even.", "Black", "Can't tell without knowing who moves."], "ans": 1, "why": "White = 14 points, Black = 14 points (Q=9, R=5, B=3, N=3, P=1; the king has no points)."}, {"kind": "castle", "fen": "2k5/8/4r3/8/8/8/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Only long castle (queenside)", "Neither", "Both", "Only short castle (kingside)"], "ans": 1, "why": "You can never castle out of check, and White's king is in check."}, {"kind": "castle", "fen": "8/3q2r1/8/8/8/3k4/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Both", "Neither", "Only short castle (kingside)", "Only long castle (queenside)"], "ans": 3, "why": "A Black piece attacks f1 or g1, so short castling is illegal. d1 and c1 are safe."}, {"kind": "castle", "fen": "5r2/4k3/8/3q4/8/8/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Only long castle (queenside)", "Neither", "Both", "Only short castle (kingside)"], "ans": 1, "why": "Black attacks a square the king must cross on BOTH sides, so White cannot castle."}, {"kind": "castle", "fen": "3k4/8/8/8/8/1n1r4/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Neither", "Only short castle (kingside)", "Only long castle (queenside)", "Both"], "ans": 1, "why": "A Black piece attacks d1 or c1, so long castling is illegal. f1 and g1 are safe."}, {"kind": "castle", "fen": "2q5/8/8/5k2/8/8/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Both", "Only short castle (kingside)", "Neither", "Only long castle (queenside)"], "ans": 1, "why": "A Black piece attacks d1 or c1, so long castling is illegal. f1 and g1 are safe."}, {"kind": "castle", "fen": "8/3k4/8/8/8/2q5/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Neither", "Only long castle (queenside)", "Both", "Only short castle (kingside)"], "ans": 0, "why": "You can never castle out of check, and White's king is in check."}, {"kind": "castle", "fen": "8/8/4k3/8/8/b7/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Only long castle (queenside)", "Both", "Neither", "Only short castle (kingside)"], "ans": 3, "why": "A Black piece attacks d1 or c1, so long castling is illegal. f1 and g1 are safe."}, {"kind": "castle", "fen": "4k3/8/8/8/8/4n3/8/R3K2R", "turn": "White", "q": "Neither king nor rooks have moved yet. Which castling moves are legal for White right now?", "opts": ["Neither", "Only long castle (queenside)", "Only short castle (kingside)", "Both"], "ans": 0, "why": "Black attacks a square the king must cross on BOTH sides, so White cannot castle."}, {"kind": "ep", "fen": "4k3/1K2p3/8/3pP3/8/8/8/8", "turn": "White", "q": "Black's last move was the pawn from d7 to d5. How can White capture it?", "opts": ["e6", "exd5", "White can't capture the pawn.", "exd6"], "ans": 3, "why": "En passant: a pawn that jumps two squares past an enemy pawn can be taken as if it moved one square. White plays exd6."}, {"kind": "ep", "fen": "k6K/1p6/8/3Pp3/8/8/8/8", "turn": "White", "q": "Black's last move was the pawn from e7 to e5. How can White capture it?", "opts": ["dxe5", "White can't capture the pawn.", "dxe6", "d6"], "ans": 2, "why": "En passant: a pawn that jumps two squares past an enemy pawn can be taken as if it moved one square. White plays dxe6."}, {"kind": "ep", "fen": "8/k5p1/8/6Pp/8/6K1/8/8", "turn": "White", "q": "Black's last move was the pawn from h7 to h5. How can White capture it?", "opts": ["gxh6", "g6", "gxh5", "White can't capture the pawn."], "ans": 0, "why": "En passant: a pawn that jumps two squares past an enemy pawn can be taken as if it moved one square. White plays gxh6."}, {"kind": "ep", "fen": "8/3p4/8/5Pp1/8/3k1K2/8/8", "turn": "White", "q": "Black's last move was the pawn from g7 to g5. How can White capture it?", "opts": ["fxg5", "f6", "White can't capture the pawn.", "fxg6"], "ans": 3, "why": "En passant: a pawn that jumps two squares past an enemy pawn can be taken as if it moved one square. White plays fxg6."}, {"kind": "ep", "fen": "8/1p2k3/8/6pP/8/8/8/4K3", "turn": "White", "q": "Black's last move was the pawn from g7 to g5. How can White capture it?", "opts": ["hxg5", "h6", "hxg6", "White can't capture the pawn."], "ans": 2, "why": "En passant: a pawn that jumps two squares past an enemy pawn can be taken as if it moved one square. White plays hxg6."}, {"kind": "ep", "fen": "8/p7/8/6pP/8/8/8/2k1K3", "turn": "White", "q": "Black's last move was the pawn from g7 to g5. How can White capture it?", "opts": ["hxg6", "h6", "hxg5", "White can't capture the pawn."], "ans": 0, "why": "En passant: a pawn that jumps two squares past an enemy pawn can be taken as if it moved one square. White plays hxg6."}];
+const VS='\uFE0E';const G={K:'\u265A'+VS,Q:'\u265B'+VS,R:'\u265C'+VS,B:'\u265D'+VS,N:'\u265E'+VS,P:'\u265F'+VS};
+function board(fen,hl){
+  let h='',rows=fen.split('/');
+  for(let r=0;r<8;r++){
+    h+='<div class="coord">'+(8-r)+'</div>';
+    let f=0;
+    for(const c of rows[r]){
+      if(/\d/.test(c)){for(let i=0;i<+c;i++){h+=cell(r,f,'');f++;}}
+      else{h+=cell(r,f,'<span class="'+(c===c.toUpperCase()?'w':'b')+'">'+G[c.toUpperCase()]+'</span>');f++;}
+    }
+  }
+  h+='<div></div>';for(const f of 'abcdefgh')h+='<div class="coord">'+f+'</div>';
+  return '<div class="board">'+h+'</div>';
+  function cell(r,f,inner){const n='abcdefgh'[f]+(8-r);return '<div class="sq '+((r+f)%2?'d':'l')+(hl===n?' hl':'')+'">'+inner+'</div>';}
+}
+const LEARN=`<div class="pad">
+<h2>How the contest works</h2>
+<ul>
+<li><strong>30-minute paper test</strong> with <strong>20 chess diagrams</strong>, each with 4 answer choices (a-d).</li>
+<li>Then a separate <strong>5-minute tiebreaker</strong> of 8 questions.</li>
+<li><strong>+1 for each right answer. No penalty for wrong answers</strong>, so never leave one blank. Guess if you have to.</li>
+<li>Grades 4 and 5 take the same test. It is not a game against a person. You solve diagrams on paper.</li>
+</ul>
+<div class="tip">The Texas Tech Chess team writes the test. Their study guide lists the 7 things below. Every question on the sample test is one of these.</div>
+<h3>1. Read chess moves (algebraic notation)</h3>
+<p>Columns are letters <strong>a-h</strong> (left to right from White's side). Rows are numbers <strong>1-8</strong> (White starts on 1 and 2). Every square has an address like <strong>e4</strong>.</p>
+<ul><li>Pieces: <strong>K</strong> king, <strong>Q</strong> queen, <strong>R</strong> rook, <strong>B</strong> bishop, <strong>N</strong> knight. Pawns have no letter.</li>
+<li><strong>Nf3</strong> = knight moves to f3. <strong>e4</strong> = pawn moves to e4.</li>
+<li><strong>x</strong> = captures. <strong>Bxc6</strong> = bishop captures on c6. <strong>exd5</strong> = the e-pawn captures on d5.</li>
+<li><strong>+</strong> = check. <strong>#</strong> = checkmate. <strong>O-O</strong> = short castle. <strong>O-O-O</strong> = long castle.</li></ul>
+<p>Practice reading squares in the <strong>Squares</strong> tab.</p>
+<h3>2. Know every move, including the special ones</h3>
+<ul><li><strong>Castling:</strong> king moves 2 squares toward a rook, and the rook jumps over to the other side. Not allowed if the king or that rook has moved before, if anything is in between, if the king is in check, or if the king would pass through or land on an attacked square.</li>
+<li><strong>Promotion:</strong> a pawn that reaches the far row becomes a queen, rook, bishop or knight (never a king). You can have two queens.</li>
+<li><strong>En passant:</strong> if an enemy pawn jumps 2 squares and lands right beside your pawn, your pawn can capture it as if it had moved only 1 square. You must do it on the very next move or lose the chance.</li></ul>
+<h3>3. Check vs checkmate vs stalemate</h3>
+<ul><li><strong>Check:</strong> the king is attacked but can get away (move, block, or capture).</li>
+<li><strong>Checkmate:</strong> the king is attacked and cannot get away. Game over.</li>
+<li><strong>Stalemate:</strong> the king is NOT attacked, but that side has no legal move. The game is a <strong>draw</strong>.</li></ul>
+<h3>4. Piece points (who is ahead?)</h3>
+<table class="v"><tr><td>Queen</td><td><strong>9</strong></td></tr><tr><td>Rook</td><td><strong>5</strong></td></tr><tr><td>Bishop</td><td><strong>3</strong></td></tr><tr><td>Knight</td><td><strong>3</strong></td></tr><tr><td>Pawn</td><td><strong>1</strong></td></tr><tr><td>King</td><td>no points</td></tr></table>
+<p>Add up each side. The bigger total is ahead. Who is to move does not matter for this question.</p>
+<h3>5. Rule of the square</h3>
+<p>Can a king catch a pawn racing to promote? Draw an imaginary square from the pawn to its promotion row (the pawn's distance to the end is the side length). If the king can step into that square on its move, it catches the pawn.</p>
+<h3>6. Basic tactics</h3>
+<ul><li><strong>Fork (double attack):</strong> one piece attacks two things at once. Knights are great at this.</li>
+<li><strong>Pin:</strong> a piece can't move because a more valuable piece (often the king) is behind it.</li>
+<li><strong>Skewer:</strong> like a pin backwards. The valuable piece is in front, has to move, and the piece behind it gets taken.</li>
+<li><strong>En prise:</strong> a piece that is attacked and not defended. Free to take.</li></ul>
+<h3>7. "Best play"</h3>
+<p>"Can White win with best play?" means both sides make their best moves. If the answer is yes, Black has no escape.</p>
+<h3>Test-day habits</h3>
+<ul><li>Check whose move it is first. It is written under every diagram.</li>
+<li>For "mate in 1" questions, look at checks first: every checkmate is a check.</li>
+<li>For mate questions, ask: can the king move? Can the check be blocked? Can the checking piece be captured? All three must be no.</li>
+<li>"None of the above" and "can't tell" are sometimes right. Don't skip them.</li></ul>
+<p style="font-size:13px;color:var(--sub)">Official practice: <a style="color:#8fb0f5" href="https://www.uiltexas.org/files/academics/aplus/A+_Chess_Sample_Ansswer_Sheet,_Test,_and_Key.pdf">UIL sample test &amp; key (grades 4-5)</a> &middot; <a style="color:#8fb0f5" href="https://www.uiltexas.org/aplus/events/chess-puzzle">past tests</a></p>
+</div>`;
+const KINDS={all:'All',mate1:'Mate in 1',state:'Check / Mate / Stalemate',material:'Who is ahead',castle:'Castling',ep:'En passant'};
+let kind='all',deck=[],idx=0,right=0,done=0,answered=false;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function newDeck(){deck=shuffle(P.filter(p=>kind==='all'||p.kind===kind));idx=0;right=0;done=0;}
+function showPuz(){
+  const p=deck[idx];answered=false;
+  let chips='<div class="chips">'+Object.keys(KINDS).map(k=>'<span class="chip'+(k===kind?' on':'')+'" data-k="'+k+'">'+KINDS[k]+'</span>').join('')+'</div>';
+  m.innerHTML='<div class="pad">'+chips+'<div class="turn">'+p.turn+' to move &middot; '+(idx+1)+' / '+deck.length+'</div>'+board(p.fen)+'<div class="q">'+p.q+'</div>'+
+   p.opts.map((o,i)=>'<button class="opt" data-i="'+i+'">'+'abcd'[i]+') '+o+'</button>').join('')+'<div class="why" id="why"></div></div>';
+  m.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{kind=c.dataset.k;newDeck();showPuz();});
+  m.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(answered)return;answered=true;done++;const i=+b.dataset.i;
+    m.querySelectorAll('.opt')[p.ans].classList.add('ok');
+    if(i===p.ans){right++;document.getElementById('why').textContent='Correct! '+p.why;}
+    else{b.classList.add('bad');document.getElementById('why').textContent='Not quite. '+p.why;}
+    score.textContent='Score '+right+' / '+done;
+  });
+  score.textContent='Score '+right+' / '+done;
+}
+let sqTarget='',sqR=0,sqN=0;
+function showSq(){
+  sqTarget='abcdefgh'[Math.floor(Math.random()*8)]+(1+Math.floor(Math.random()*8));
+  m.innerHTML='<div class="pad"><p style="text-align:center">What is the name of the <strong style="color:#e0a800">gold</strong> square?</p>'+board('8/8/8/8/8/8/8/8',sqTarget)+
+   '<input class="sqin" id="si" maxlength="2" placeholder="like e4" autocomplete="off" autocapitalize="off"><div class="why" id="why"></div></div>';
+  const si=document.getElementById('si');
+  si.onkeyup=()=>{if(si.value.length===2){sqN++;
+    if(si.value.toLowerCase()===sqTarget){sqR++;why.textContent='Correct! '+sqTarget;setTimeout(showSq,700);}
+    else{why.style.color='#f08a8a';why.textContent='It was '+sqTarget+'. Letter = column (a-h), number = row (1-8).';setTimeout(()=>{why.style.color='';showSq();},1800);}
+    score.textContent='Squares '+sqR+' / '+sqN;}};
+  score.textContent='Squares '+sqR+' / '+sqN;
+}
+let view='learn';
+function go(v){view=v;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
+  bar.style.display=v==='learn'?'none':'flex';next.style.display=v==='puz'?'':'none';m.scrollTop=0;
+  if(v==='learn')m.innerHTML=LEARN;else if(v==='puz'){if(!deck.length)newDeck();showPuz();}else showSq();}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.v));
+next.onclick=()=>{idx++;if(idx>=deck.length){m.innerHTML='<div class="pad"><div class="big">'+right+' / '+done+'</div><p style="text-align:center">Round done! Tap Next for a new shuffled round.</p></div>';idx=-1;newDeck();idx=-1;return;}showPuz();};
+const _n=next.onclick;next.onclick=()=>{if(idx===-1){idx=0;showPuz();return;}_n();};
+go('learn');
+</script></body></html>
